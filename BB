@@ -1,0 +1,44 @@
+//Bollinger Band Color + Super Trend
+//Version V2
+study(shorttitle="BB", title="BB", overlay=true)
+ 
+//########################## Parametre  ########################################
+src = input(defval=close, title="Source")
+length = input(defval=20, minval=1, title ="Boullinger Bands")
+mult = input(defval=2.0, minval=0.001, maxval=50)
+
+souc = input(title="Color of the BB with Super Trend", type=bool, defval=false)
+Factor=input(title="Super Trend", defval=4, minval=1,maxval = 100)
+ATR=input(title="ATR", defval=12, minval=1,maxval = 100)
+spt = input(title="View Super Trend on chart", type=bool, defval=false)
+
+
+//######################## Bollinger Bands #####################################
+
+basis = sma(src, length)
+dev = mult * stdev(src, length)
+upper = basis + dev
+lower = basis - dev
+
+//########################## Super Trend #######################################
+
+Up=hl2-(Factor*atr(ATR))
+Dn=hl2+(Factor*atr(ATR))
+TUp=src[1]>TUp[1]? max(Up,TUp[1]) : Up
+TDown=src[1]<TDown[1]? min(Dn,TDown[1]) : Dn
+Trend = src > TDown[1] ? 1: src < TUp[1]? -1: nz(Trend[1],1)
+Tsl = Trend==1? TUp: TDown
+TslView = spt == true ? Tsl : false
+//############################# couleur ##########################################
+
+linecolorATR = Trend == 1 ? green : red
+linecolorPrice = src >= basis ? green : red
+linecolor = souc == true ? linecolorATR : linecolorPrice
+
+//########################### Affichage ########################################
+
+plot(TslView, color = linecolorATR , style = line , linewidth = 2, title = "SuperTrend")
+plot(basis, color=red, transp=75, title="Moving Average")
+p1 = plot(upper, color=linecolor, transp=35, title="high band")
+p2 = plot(lower, color=linecolor, transp=35, title="Low band")
+fill(p1, p2, color=linecolor, transp=95, title="background")
