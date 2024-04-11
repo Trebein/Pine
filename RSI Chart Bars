@@ -1,3 +1,5 @@
+# разворот
+
 // With levels candle border must be removed for better view  
 // By Glaz
 study(title="RSI Chart Bars",overlay = true, shorttitle="RSI Bars")
