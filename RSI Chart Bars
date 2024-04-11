@@ -1,7 +1,5 @@
-# подсвечивает свечи, которые выходят за зоны RSI
+// подсвечивает свечи, которые выходят за зоны RSI
 
-// With levels candle border must be removed for better view  
-// By Glaz
 study(title="RSI Chart Bars",overlay = true, shorttitle="RSI Bars")
 src = close, len = input(14, minval=1, title="Length")
 up = rma(max(change(src), 0), len)
