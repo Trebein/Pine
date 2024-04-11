@@ -1,4 +1,4 @@
-# разворот
+# подсвечивает свечи, которые выходят за зоны RSI
 
 // With levels candle border must be removed for better view  
 // By Glaz
