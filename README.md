@@ -1,4 +1,6 @@
 ![Coincap (Price USD)](https://img.shields.io/coincap/price-usd/bitcoin?logo=bitcoin)
+![Coincap (Price USD)](https://img.shields.io/coincap/price-usd/ethereum?logo=ethereum)
+
 ## RSI Chart Bars
 ```python
 study(title="RSI Chart Bars",overlay = true, shorttitle="RSI Bars")
