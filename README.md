@@ -1,5 +1,5 @@
 ![Coincap (Price USD)](https://img.shields.io/coincap/price-usd/bitcoin?logo=bitcoin)
-# ![Coincap (Change Percent 24Hr)](https://img.shields.io/coincap/change-percent-24hr/bitcoin?logo=bitcoin)
+## RSI Chart Bars
 ```python
 study(title="RSI Chart Bars",overlay = true, shorttitle="RSI Bars")
 src = close, len = input(14, minval=1, title="Length")
