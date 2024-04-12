@@ -1,5 +1,3 @@
-![Bower Version](https://img.shields.io/PINESCRIPT/v5/PINESCRIPT)
-
 ![Coincap (Price USD)](https://img.shields.io/coincap/price-usd/bitcoin?logo=bitcoin)
 ![Coincap (Price USD)](https://img.shields.io/coincap/price-usd/ethereum?logo=ethereum)
 
