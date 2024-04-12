@@ -1,7 +1,7 @@
 ![Coincap (Price USD)](https://img.shields.io/coincap/price-usd/bitcoin?logo=bitcoin)
 ![Coincap (Price USD)](https://img.shields.io/coincap/price-usd/ethereum?logo=ethereum)
 
-![PINESCRIPT V5](https://img.shields.io/coincap/price-usd/ethereum?logo=ethereum)
+![PINESCRIPT V5](https://img.shields.io/pypi/pyversions)
 
 ## RSI Chart Bars
 ```python
