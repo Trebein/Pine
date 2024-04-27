@@ -1,0 +1,113 @@
+//@version=3
+study(title="Fractals and Levels by JustUncleL", shorttitle="FRACTALS", overlay=true)
+ShowFractals     = input(true)
+ShowFractalLevels= input(false)
+ShowHHLL         = input(false)
+filterBW         = input(false, title="Show Ideal Fractals Only")
+uRenko           = input(false, title="Use Renko Style Fractals (open/close for high/low)")
+maxLvlLen        = input(0,     title="Maximum Fractal Level Extension Length (0=No limit)")
+ShowSwing        = input(false, title="Show Swing Arrows")
+uMAf             = input(false,title="Use MA Filter on Fractals")
+fast_ma_type     = input(defval="EMA", title="Fast MA Type ", options=["SMA", "EMA", "WMA", "VWMA", "Smooth SMA", "DEMA", "TEMA", "Hull MA", "ZeroLag EMA", "Triangular MA", "SuperSmooth MA"])
+fast_ma_len      = input(defval=21, title="Fast MA - Length", minval=1)
+fast_ma_src      = input(close, title="Fast MA - Source")
+// Slow MA - type, source, length
+slow_ma_type     = input(defval="EMA", title="Slow MA Type ", options=["SMA", "EMA", "WMA", "VWMA", "Smooth SMA", "DEMA", "TEMA", "Hull MA", "ZeroLag EMA", "Triangular MA", "SuperSmooth MA"])
+slow_ma_len      = input(defval=36, title="Slow MA - Length", minval=1)
+slow_ma_src      = input(close, title="Slow MA - Source")
+sMAs             = input(false, title="Show MA Lines")
+close_ = close
+open_  = open 
+high_  = uRenko? max(close_,open_) : high
+low_   = uRenko? min(close_,open_) : low
+DodgerBlue  = #1E90FF
+isIdealFractal(mode) =>
+    ret = mode == 1 ? high_[5] < high_[4] and high_[4] < high_[3] and high_[3] > high_[2] and high_[2] > high_[1] : 
+          mode == -1 ? low_[5] > low_[4] and low_[4] > low_[3] and low_[3] < low_[2] and low_[2] < low_[1] : false
+isRegularFractal(mode) =>
+    ret = mode == 1 ? high_[5] < high_[3] and high_[4] < high_[3] and high_[3] > high_[2] and high_[3] > high_[1] : 
+          mode == -1 ? low_[5] > low_[3] and low_[4] > low_[3] and low_[3] < low_[2] and low_[3] < low_[1] : false
+variant_supersmoother(src,len) =>
+    a1 = exp(-1.414*3.14159 / len)
+    b1 = 2*a1*cos(1.414*3.14159 / len)
+    c2 = b1
+    c3 = (-a1)*a1
+    c1 = 1 - c2 - c3
+    v9 = 0.0
+    v9 := c1*(src + nz(src[1])) / 2 + c2*nz(v9[1]) + c3*nz(v9[2])
+    v9
+variant_smoothed(src,len) =>
+    v5 = 0.0
+    v5 := na(v5[1]) ? sma(src, len) : (v5[1] * (len - 1) + src) / len
+    v5
+variant_zerolagema(src,len) =>
+    ema1 = ema(src, len)
+    ema2 = ema(ema1, len)
+    v10 = ema1+(ema1-ema2)
+    v10
+variant_doubleema(src,len) =>
+    v2 = ema(src, len)
+    v6 = 2 * v2 - ema(v2, len)
+    v6
+variant_tripleema(src,len) =>
+    v2 = ema(src, len)
+    v7 = 3 * (v2 - ema(v2, len)) + ema(ema(v2, len), len)
+    v7
+variant(type, src, len) =>
+    type=="EMA"     ? ema(src,len) : 
+      type=="WMA"   ? wma(src,len): 
+      type=="VWMA"  ? vwma(src,len) : 
+      type=="Smooth SMA"  ? variant_smoothed(src,len) : 
+      type=="DEMA"  ? variant_doubleema(src,len): 
+      type=="TEMA"  ? variant_tripleema(src,len): 
+      type=="Hull MA"? wma(2 * wma(src, len / 2) - wma(src, len), round(sqrt(len))) :
+      type=="SuperSmooth MA"  ? variant_supersmoother(src,len) : 
+      type=="ZeroLag EMA"  ? variant_zerolagema(src,len) : 
+      type=="Triangular MA"   ? sma(sma(src,len),len) : sma(src,len)
+fast_ma_series  = variant(fast_ma_type, fast_ma_src, fast_ma_len)
+slow_ma_series  = variant(slow_ma_type, slow_ma_src, slow_ma_len)
+plot(sMAs? fast_ma_series: na, color=lime,title="Fast MA", join=true,style=circles,linewidth=2,transp=15)
+plot(sMAs? slow_ma_series: na, color=gray,title="Slow MA", join=true,style=circles,linewidth=2,transp=15)
+filteredtopf = filterBW ? isIdealFractal(1) : isRegularFractal(1)
+filteredbotf = filterBW ? isIdealFractal(-1) : isRegularFractal(-1)
+filteredtopf := (uMAf and fast_ma_series<slow_ma_series)? false : filteredtopf
+filteredbotf := (uMAf and fast_ma_series>slow_ma_series)? false : filteredbotf
+plotshape(ShowFractals or filterBW? filteredtopf :na, title='Filtered Top Fractals', style=shape.triangleup, location=location.abovebar, color=green, offset=-3, transp=20)
+plotshape(ShowFractals or filterBW? filteredbotf :na, title='Filtered Bottom Fractals', style=shape.triangledown, location=location.belowbar, color=red, offset=-3, transp=20)
+topfractals = 0.0
+botfractals = 0.0
+topfractals := filteredtopf ? high_[3] : topfractals[1]
+botfractals := filteredbotf ? low_[3] : botfractals[1]
+topfcolor = topfractals != topfractals[1] ? na : green
+botfcolor = botfractals != botfractals[1] ? na : red
+higherhigh = filteredtopf == false ? false : ( valuewhen(filteredtopf == true, high_[3], 1) < valuewhen(filteredtopf == true, high_[3], 0) and 
+                                               (filterBW or valuewhen(filteredtopf == true, high_[3], 2) < valuewhen(filteredtopf == true, high_[3], 0)))
+lowerhigh = filteredtopf == false ? false : ( valuewhen(filteredtopf == true, high_[3], 1) > valuewhen(filteredtopf == true, high_[3], 0)  and 
+                                              (filterBW or valuewhen(filteredtopf == true, high_[3], 2) > valuewhen(filteredtopf == true, high_[3], 0)))
+higherlow = filteredbotf == false ? false : ( valuewhen(filteredbotf == true, low_[3], 1) < valuewhen(filteredbotf == true, low_[3], 0) and 
+                                              (filterBW or valuewhen(filteredbotf == true, low_[3], 2) < valuewhen(filteredbotf == true, low_[3], 0)))
+lowerlow = filteredbotf == false ? false : ( valuewhen(filteredbotf == true, low_[3], 1) > valuewhen(filteredbotf == true, low_[3], 0) and 
+                                              (filterBW or valuewhen(filteredbotf == true, low_[3], 2) > valuewhen(filteredbotf == true, low_[3], 0)))
+plotshape(ShowHHLL ? higherhigh : na, title='HH', style=shape.square, location=location.abovebar, color=black, text="HH", offset=-3,transp=0)
+plotshape(ShowHHLL ? lowerhigh : na, title='LH', style=shape.square, location=location.abovebar, color=black, text="LH", offset=-3,transp=0)
+plotshape(ShowHHLL ? higherlow : na, title='HL', style=shape.square, location=location.belowbar, color=black, text="HL", offset=-3,transp=0)
+plotshape(ShowHHLL ? lowerlow : na, title='LL', style=shape.square, location=location.belowbar, color=black, text="LL", offset=-3,transp=0)
+topcnt = 0
+botcnt = 0
+topcnt := filteredtopf ? 0 : nz(topcnt[1])+1
+botcnt := filteredbotf ? 0 : nz(botcnt[1])+1
+topfs = 0.0
+botfs = 0.0
+topfs := filteredtopf ? high_[3] : topfs[1]
+botfs := filteredbotf ? low_[3] : botfs[1]
+topfc = (topfs != topfs[1]) ? na : green
+botfc = (botfs != botfs[1]) ? na : red
+plot(ShowFractalLevels and (topcnt<=3)? topfs : na, color=topfc, transp=70, linewidth=6, offset=-3, title="Top Levels -3")
+plot(ShowFractalLevels and (botcnt<=3)? botfs : na, color=botfc, transp=70, linewidth=6, offset=-3, title="Bottom Levels -3")
+plot(ShowFractalLevels and (maxLvlLen==0 or topcnt<maxLvlLen)? topfs : na, color=topfc, transp=70, linewidth=6, offset=0, title="Top Levels 1")
+plot(ShowFractalLevels and (maxLvlLen==0 or botcnt<maxLvlLen)? botfs : na, color=botfc, transp=70, linewidth=6, offset=0, title="Bottom Levels 1")
+buy  = filteredbotf
+sell = filteredtopf
+plotarrow(ShowSwing and buy?1:na, title="BUY Arrow", colorup=lime, maxheight=60, minheight=50, transp=20)
+plotarrow(ShowSwing and sell?-1:na, title="SELL Arrow", colordown=red, maxheight=60, minheight=50, transp=20)
+alertcondition(buy or sell,title="Swing Alert Arrow",message="Swing Alert")
